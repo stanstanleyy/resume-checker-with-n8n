@@ -58,8 +58,6 @@ public class HomeController {
 
             String rawJson = response.getBody();
 
-            System.out.println("RAW JSON: " + rawJson);
-
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
 
