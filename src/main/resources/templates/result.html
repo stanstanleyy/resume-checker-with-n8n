@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis Results – ResuméAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              forest: {
+                50: "#f2f7f2",
+                100: "#e0ede0",
+                200: "#c3dbc4",
+                300: "#98c19a",
+                400: "#66a069",
+                500: "#437f46",
+                600: "#326435",
+                700: "#28502b",
+                800: "#214023",
+                900: "#1b351e",
+              },
+              moss: {
+                400: "#99b267",
+                500: "#7a9647",
+              },
+              bark: {
+                400: "#c2a063",
+                500: "#b38842",
+              },
+            },
+            fontFamily: {
+              display: ["Poppins", "sans-serif"],
+              body: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      html {
+        scroll-padding-top: 72px;
+      }
+
+      /* ── Page background ── */
+      body {
+        background-color: #f2f7f2;
+        background-image:
+          radial-gradient(
+            circle at 8% 92%,
+            rgba(67, 127, 70, 0.07) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 92% 8%,
+            rgba(122, 150, 71, 0.06) 0%,
+            transparent 50%
+          );
+      }
+
+      /* ── Nav ── */
+      .nav-glass {
+        background: rgba(27, 53, 30, 0.88);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(152, 193, 154, 0.15);
+      }
+
+      /* ── Cards ── */
+      .card {
+        background: #fff;
+        border: 1px solid #c3dbc4;
+        box-shadow:
+          0 2px 20px rgba(33, 64, 35, 0.07),
+          0 1px 4px rgba(33, 64, 35, 0.04);
+      }
+
+      /* ── Score ring ── */
+      .score-ring {
+        transition: stroke-dashoffset 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* ── Badge level colours ── */
+      .badge-excellent {
+        background: rgba(67, 127, 70, 0.12);
+        color: #326435;
+        border: 1px solid rgba(67, 127, 70, 0.3);
+      }
+      .badge-good {
+        background: rgba(122, 150, 71, 0.12);
+        color: #5e7636;
+        border: 1px solid rgba(122, 150, 71, 0.3);
+      }
+      .badge-fair {
+        background: rgba(179, 136, 66, 0.12);
+        color: #9a6f35;
+        border: 1px solid rgba(179, 136, 66, 0.3);
+      }
+      .badge-poor {
+        background: rgba(180, 60, 60, 0.1);
+        color: #a33;
+        border: 1px solid rgba(180, 60, 60, 0.25);
+      }
+
+      /* ── Skill pill ── */
+      .skill-pill {
+        background: rgba(67, 127, 70, 0.08);
+        border: 1px solid rgba(152, 193, 154, 0.5);
+        color: #28502b;
+        font-size: 0.72rem;
+        font-weight: 500;
+        padding: 0.25rem 0.65rem;
+        border-radius: 99px;
+        white-space: nowrap;
+      }
+
+      /* ── Strength / Gap items ── */
+      .item-strength {
+        border-left: 3px solid #437f46;
+        background: rgba(67, 127, 70, 0.04);
+      }
+      .item-gap {
+        border-left: 3px solid #b38842;
+        background: rgba(179, 136, 66, 0.04);
+      }
+
+      /* ── Recommendation box ── */
+      .rec-box {
+        background: linear-gradient(
+          135deg,
+          rgba(50, 100, 53, 0.07) 0%,
+          rgba(122, 150, 71, 0.07) 100%
+        );
+        border: 1px solid rgba(152, 193, 154, 0.45);
+      }
+
+      /* ── Primary button ── */
+      .btn-primary {
+        background: linear-gradient(135deg, #326435 0%, #437f46 100%);
+        box-shadow: 0 4px 16px rgba(50, 100, 53, 0.3);
+        transition: all 0.25s ease;
+      }
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #28502b 0%, #326435 100%);
+        box-shadow: 0 6px 24px rgba(50, 100, 53, 0.45);
+        transform: translateY(-1px);
+      }
+
+      /* ── Ghost button ── */
+      .btn-ghost {
+        border: 1.5px solid #98c19a;
+        color: #326435;
+        transition: all 0.25s ease;
+        background: transparent;
+      }
+      .btn-ghost:hover {
+        background: rgba(67, 127, 70, 0.07);
+        border-color: #437f46;
+      }
+
+      /* ── Fade-up animation ── */
+      .fade-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeUp 0.6s ease forwards;
+      }
+      .d1 {
+        animation-delay: 0.08s;
+      }
+      .d2 {
+        animation-delay: 0.16s;
+      }
+      .d3 {
+        animation-delay: 0.24s;
+      }
+      .d4 {
+        animation-delay: 0.32s;
+      }
+      .d5 {
+        animation-delay: 0.4s;
+      }
+      .d6 {
+        animation-delay: 0.48s;
+      }
+      @keyframes fadeUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+
+  <body class="min-h-screen">
+    <!-- ─── NAVBAR ──────────────────────────────────────────── -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-50">
+      <div
+        class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+            <path
+              d="M6 22C6 22 8 10 20 6C20 6 18 18 6 22Z"
+              fill="#66a069"
+              opacity=".9"
+            />
+            <path
+              d="M6 22C6 22 10 16 14 13"
+              stroke="#98c19a"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span
+            class="font-display text-white text-base font-semibold tracking-wide"
+          >
+            Resumé<span class="text-forest-400">AI</span>
+          </span>
+        </div>
+        <a
+          th:href="@{/}"
+          class="group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-forest-200 bg-forest-900/80 border border-forest-700/40 hover:bg-forest-800 hover:border-forest-500/60 transition-all duration-200 ease-out shadow-sm hover:shadow-md hover:-translate-y-[1px]"
+        >
+          <svg
+            class="transition-transform duration-200 group-hover:-translate-x-0.5"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+
+          Back to Home
+        </a>
+      </div>
+    </nav>
+
+    <!-- ─── MAIN CONTENT ─────────────────────────────────────── -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20">
+      <!-- Page title -->
+      <div class="fade-up mb-8 text-center">
+        <span
+          class="text-xs font-medium text-forest-500 tracking-widest uppercase"
+          >Analysis Complete</span
+        >
+        <h1
+          class="font-display text-forest-800 text-2xl sm:text-3xl font-bold mt-1 tracking-tight"
+        >
+          Resume Match Results
+        </h1>
+        <p class="text-forest-500 text-sm mt-1">
+          Analyzed for
+          <span
+            class="font-semibold text-forest-700"
+            th:text="${result.candidateName}"
+            >Stanley Panag</span
+          >
+          &middot;
+          <span
+            class="text-forest-400 text-xs"
+            th:text="${#temporals.format(result.analyzedAt, 'MMM dd, yyyy · hh:mm a')}"
+            >Apr 24, 2026</span
+          >
+        </p>
+      </div>
+
+      <!-- ── TOP ROW: Score card + Recommendation ── -->
+      <div class="fade-up d1 grid grid-cols-1 md:grid-cols-5 gap-5 mb-5">
+        <!-- Score Card -->
+        <div
+          class="card rounded-2xl p-6 flex flex-col items-center justify-center md:col-span-2 gap-3"
+        >
+          <!-- SVG Ring -->
+          <div class="relative w-36 h-36">
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <!-- Track -->
+              <circle
+                cx="60"
+                cy="60"
+                r="50"
+                fill="none"
+                stroke="#e0ede0"
+                stroke-width="10"
+              />
+              <!-- Progress — stroke-dasharray 314 = 2π×50 -->
+              <circle
+                id="score-ring"
+                cx="60"
+                cy="60"
+                r="50"
+                fill="none"
+                stroke="url(#ringGrad)"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="314"
+                stroke-dashoffset="314"
+                class="score-ring"
+              />
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#326435" />
+                  <stop offset="100%" stop-color="#66a069" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <!-- Score number centred -->
+            <div
+              class="absolute inset-0 flex flex-col items-center justify-center"
+            >
+              <span
+                id="score-number"
+                class="font-display text-forest-800 font-bold text-4xl leading-none"
+                >0</span
+              >
+              <span class="text-forest-400 text-xs font-medium mt-0.5"
+                >/ 100</span
+              >
+            </div>
+          </div>
+
+          <!-- Level badge -->
+          <span
+            id="level-badge"
+            class="text-xs font-semibold px-3 py-1 rounded-full"
+            th:classappend="${result.matchLevel == 'Excellent'} ? 'badge-excellent' :
+                            (${result.matchLevel == 'Good'}      ? 'badge-good'      :
+                            (${result.matchLevel == 'Fair'}      ? 'badge-fair'      : 'badge-poor'))"
+            th:text="${result.matchLevel}"
+            >Excellent</span
+          >
+
+          <p class="text-forest-500 text-xs text-center leading-relaxed">
+            Overall compatibility between the resume and job description.
+          </p>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="card rounded-2xl p-6 md:col-span-3 flex flex-col gap-4">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background: rgba(67, 127, 70, 0.1)"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#437f46"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h2 class="font-display text-forest-800 font-semibold text-base">
+              AI Recommendation
+            </h2>
+          </div>
+
+          <!--
+            ╔══════════════════════════════════════════════════════════════╗
+            ║  RECOMMENDATION FIX                                         ║
+            ║  Splits on numbered patterns like "1.", "2.", "3." etc.     ║
+            ║  using a JS-rendered hidden span to split client-side,      ║
+            ║  then renders each sentence as its own paragraph.           ║
+            ║                                                             ║
+            ║  Server-side Thymeleaf approach: we use th:utext with a    ║
+            ║  utility expression to replace " 1. / 2. / 3." markers     ║
+            ║  with a sentinel, then iterate.                             ║
+            ╚══════════════════════════════════════════════════════════════╝
+
+            Strategy: Replace numbered list markers (e.g. " 2. ", " 3. ") with
+            a pipe "|" delimiter, split on "|", then render each chunk as its
+            own <p>. This handles "1. ... 2. ... 3. ..." patterns from the AI.
+          -->
+          <div
+            id="rec-container"
+            class="rec-box rounded-xl p-4 flex flex-col gap-2"
+          >
+            <!--
+              We store the raw recommendation in a data attribute,
+              then JavaScript splits and renders it as clean paragraphs.
+              This avoids fragile Thymeleaf string-splitting on arbitrary AI output.
+            -->
+            <p
+              id="rec-raw"
+              class="hidden"
+              th:text="${result.recommendation}"
+            ></p>
+          </div>
+
+          <!-- Quick stats row -->
+          <div class="grid grid-cols-2 gap-3 mt-auto">
+            <div
+              class="rounded-xl p-3"
+              style="
+                background: rgba(67, 127, 70, 0.06);
+                border: 1px solid rgba(152, 193, 154, 0.3);
+              "
+            >
+              <div class="text-forest-500 text-xs mb-0.5">Strengths Found</div>
+              <div
+                class="font-display text-forest-800 font-bold text-xl"
+                th:text="${#lists.size(result.strengths)}"
+              >
+                8
+              </div>
+            </div>
+            <div
+              class="rounded-xl p-3"
+              style="
+                background: rgba(179, 136, 66, 0.06);
+                border: 1px solid rgba(179, 136, 66, 0.25);
+              "
+            >
+              <div class="text-bark-500 text-xs mb-0.5">Gaps Identified</div>
+              <div
+                class="font-display text-bark-500 font-bold text-xl"
+                th:text="${#lists.size(result.gaps)}"
+              >
+                2
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STRENGTHS & GAPS ROW ── -->
+      <div class="fade-up d2 grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <!-- Strengths -->
+        <div class="card rounded-2xl p-6 flex flex-col gap-4">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background: rgba(67, 127, 70, 0.1)"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#437f46"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h2 class="font-display text-forest-800 font-semibold text-base">
+              Strengths
+            </h2>
+          </div>
+
+          <ul class="flex flex-col gap-2.5">
+            <!--
+              ╔══════════════════════════════════════════════════════════════╗
+              ║  STRENGTHS FIX                                              ║
+              ║  Previously the bold title + normal text split on ":" was   ║
+              ║  breaking when AI returned strings without a colon, causing ║
+              ║  the second <span> (substringAfter) to render empty and the ║
+              ║  first span to swallow the whole string with a trailing ":".║
+              ║                                                             ║
+              ║  Fix: guard with th:if / th:unless on contains(':').       ║
+              ║  - If the string HAS a colon → split into bold title + body ║
+              ║  - If NOT → render the whole string as plain text           ║
+              ╚══════════════════════════════════════════════════════════════╝
+            -->
+            <li
+              th:each="strength : ${result.strengths}"
+              class="item-strength rounded-lg px-4 py-3"
+            >
+              <p class="text-forest-700 text-xs leading-relaxed">
+                <!-- Case 1: "Title: description" format -->
+                <th:block th:if="${#strings.contains(strength, ':')}">
+                  <span
+                    class="font-semibold text-forest-800"
+                    th:text="${#strings.substringBefore(strength, ':')} + ':'"
+                  ></span>
+                  <span
+                    th:text="${#strings.substringAfter(strength, ':')}"
+                  ></span>
+                </th:block>
+                <!-- Case 2: plain sentence, no colon — render as-is -->
+                <th:block th:unless="${#strings.contains(strength, ':')}">
+                  <span th:text="${strength}"></span>
+                </th:block>
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Gaps -->
+        <div class="card rounded-2xl p-6 flex flex-col gap-4">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background: rgba(179, 136, 66, 0.1)"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#b38842"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h2 class="font-display text-forest-800 font-semibold text-base">
+              Areas to Address
+            </h2>
+          </div>
+
+          <ul class="flex flex-col gap-2.5">
+            <li
+              th:each="gap : ${result.gaps}"
+              class="item-gap rounded-lg px-4 py-3"
+            >
+              <p
+                class="text-forest-700 text-xs leading-relaxed"
+                th:text="${gap}"
+              ></p>
+            </li>
+          </ul>
+
+          <!-- Encouragement note when gaps are minor -->
+          <div
+            class="rounded-xl p-3 mt-auto"
+            style="
+              background: rgba(67, 127, 70, 0.05);
+              border: 1px solid rgba(152, 193, 154, 0.3);
+            "
+          >
+            <p class="text-forest-500 text-xs leading-relaxed">
+              💡 Minor gaps are normal for associate-level roles. Focus on
+              showcasing adaptability in interviews.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── KEY SKILLS ── -->
+      <div class="fade-up d3 card rounded-2xl p-6 mb-5">
+        <div class="flex items-center gap-2 mb-4">
+          <div
+            class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style="background: rgba(67, 127, 70, 0.1)"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#437f46"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              />
+            </svg>
+          </div>
+          <h2 class="font-display text-forest-800 font-semibold text-base">
+            Key Skills Detected
+          </h2>
+          <span
+            class="ml-auto text-xs text-forest-400 font-medium"
+            th:text="${#lists.size(result.keySkills)} + ' skills'"
+            >34 skills</span
+          >
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <span
+            th:each="skill : ${result.keySkills}"
+            class="skill-pill"
+            th:text="${skill}"
+            >Java</span
+          >
+        </div>
+      </div>
+
+      <!-- ── ACTIONS ROW ── -->
+      <div
+        class="fade-up d4 flex flex-col sm:flex-row gap-3 justify-center mt-8"
+      >
+        <a
+          th:href="@{/}"
+          class="btn-ghost font-medium px-6 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to Main Page
+        </a>
+        <a
+          th:href="@{/}"
+          class="btn-primary text-white font-medium px-6 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="1 4 1 10 7 10" />
+            <polyline points="23 20 23 14 17 14" />
+            <path
+              d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+            />
+          </svg>
+          Analyze Another Resume
+        </a>
+        <button
+          onclick="window.print()"
+          class="btn-ghost font-medium px-6 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 6 2 18 2 18 9" />
+            <path
+              d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+            />
+            <rect x="6" y="14" width="12" height="8" />
+          </svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </main>
+
+    <!-- ─── FOOTER ────────────────────────────────────────────── -->
+    <footer
+      style="
+        background: #1b351e;
+        border-top: 1px solid rgba(152, 193, 154, 0.1);
+      "
+      class="py-8 px-4"
+    >
+      <div
+        class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+            <path
+              d="M6 22C6 22 8 10 20 6C20 6 18 18 6 22Z"
+              fill="#66a069"
+              opacity=".9"
+            />
+          </svg>
+          <span class="font-display text-white text-sm font-semibold"
+            >Resumé<span class="text-forest-400">AI</span></span
+          >
+        </div>
+        <p class="text-forest-600 text-xs">
+          © 2025 ResuméAI · Your data stays private
+        </p>
+      </div>
+    </footer>
+  </body>
+
+  <!-- ─── SCRIPTS ───────────────────────────────────────────── -->
+  <script th:inline="javascript">
+    // ── Score ring animation ──────────────────────────────────
+    const SCORE = /*[[${result.matchScore}]]*/ 0;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // Score ring
+      const ring = document.getElementById("score-ring");
+      const number = document.getElementById("score-number");
+      const CIRCUMFERENCE = 2 * Math.PI * 50; // 314.16
+
+      let start = null;
+      const duration = 1400;
+
+      function animate(ts) {
+        if (!start) start = ts;
+        const progress = Math.min((ts - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+        number.textContent = Math.round(eased * SCORE);
+        ring.style.strokeDashoffset =
+          CIRCUMFERENCE - ((eased * SCORE) / 100) * CIRCUMFERENCE;
+
+        if (progress < 1) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      // ── Recommendation paragraph rendering ───────────────────
+      // Reads the raw text from the hidden <p> rendered by Thymeleaf,
+      // splits on numbered list markers (e.g. "1.", "2.", "3." …),
+      // and injects clean <p> elements into #rec-container.
+      const rawEl = document.getElementById("rec-raw");
+      const container = document.getElementById("rec-container");
+
+      if (rawEl && container) {
+        const raw = rawEl.textContent.trim();
+
+        // Split on patterns like: "1. ", "2. ", "3. " … at any position
+        // This regex finds a digit(s) followed by a period and a space,
+        // preceded by either start-of-string or whitespace.
+        const parts = raw
+          .split(/(?<!\d)\d+\.\s+/) // split on "N. " markers
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0); // remove empty chunks
+
+        // If splitting produced only 1 chunk (no numbered list),
+        // try splitting on double-newlines as a fallback.
+        const paragraphs =
+          parts.length > 1
+            ? parts
+            : raw
+                .split(/\n{2,}/)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+
+        // Render each chunk as a styled paragraph
+        container.innerHTML = paragraphs
+          .map(
+            (p) =>
+              `<p class="text-forest-700 text-sm leading-relaxed">${p}</p>`,
+          )
+          .join("");
+      }
+    });
+  </script>
+</html>
