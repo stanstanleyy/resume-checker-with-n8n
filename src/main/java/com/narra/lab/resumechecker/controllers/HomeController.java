@@ -36,6 +36,12 @@ public class HomeController {
             // 1. Convert PDF to Base64 String
             String base64Resume = Base64.getEncoder().encodeToString(file.getBytes());
 
+            // Check if jobDesction is empty
+            if (jobDescription == null || jobDescription.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Job description cannot be empty.");
+                return "redirect:/";
+            }
+
             // 2. Prepare JSON body
             Map<String, String> jsonMap = new HashMap<>();
             jsonMap.put("resumeBase64", base64Resume);
@@ -54,6 +60,7 @@ public class HomeController {
             // resposnse structure
             String n8nUrl = "https://stanstanley.app.n8n.cloud/webhook-test/checkResume";
 
+            // Creating Post Request to the n8n Workflow
             ResponseEntity<String> response = restTemplate.postForEntity(n8nUrl, requestEntity, String.class);
 
             String rawJson = response.getBody();
